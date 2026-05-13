@@ -19,6 +19,7 @@ ENV/
 # Данные (HITRAN, большие промежуточные файлы)
 data/processed/*.npy
 data/processed/*.txt
+data/raw/*.txt
 data/processed/*.h5
 data/plots/old_plots/
 data/processed/old_results/
