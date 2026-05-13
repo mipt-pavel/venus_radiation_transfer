@@ -6,7 +6,7 @@
 
 ## Структура проекта
 
-"""
+```bash
 venus_radiative_transfer/
 ├── data/
 │   ├── raw/                     # исходные данные параметров атмосферы и аэрозолей
@@ -25,4 +25,4 @@ venus_radiative_transfer/
 │       ├── run.py               # главный скрипт
 │       └── plot.py              # построение графиков
 └── README.md
-"""
+```
