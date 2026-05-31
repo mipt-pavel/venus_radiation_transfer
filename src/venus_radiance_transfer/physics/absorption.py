@@ -4,7 +4,7 @@ import numpy as np
 from tqdm import tqdm
 from hapi import db_begin, absorptionCoefficient_Voigt
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from ..config import HITRAN_CACHE_DIR, N_WORKERS, TEMP_DIR
+from ..config import HITRAN_CACHE_DIR, N_WORKERS, TEMP_DIR, CUT_HEIGHT, WnWing_WH
 from ..data.cache import init_k_abs_cache, save_k_abs_layer
 
 # Глобальный флаг для отслеживания инициализации кэша для компонент
@@ -12,7 +12,7 @@ _CACHE_INITIALIZED = {}
 
 def ensure_cache_initialized(component_name, n_layers, n_wn):
     if component_name not in _CACHE_INITIALIZED:
-        init_k_abs_cache(component_name, n_layers, n_wn)
+        init_k_abs_cache(component_name, n_layers-CUT_HEIGHT, n_wn)
         _CACHE_INITIALIZED[component_name] = True
 
 def compute_k_abs_layer_gas(gas, layer_idx, p_atm, T_K, n_layer, wn_grid):
@@ -25,20 +25,20 @@ def compute_k_abs_layer_gas(gas, layer_idx, p_atm, T_K, n_layer, wn_grid):
     if gas['VMR'][layer_idx] > 0:
         _, k_abs = absorptionCoefficient_Voigt(
             SourceTables=gas['name'],
-            Components=[(gas['M'], gas['I'], gas['VMR'][layer_idx])],
             Environment={'p': p_atm, 'T': T_K},
             WavenumberGrid=wn_grid,
             Diluent=gas['Diluent'][layer_idx],
-            HITRAN_units=True
+            HITRAN_units=True,
+            WavenumberWingHW=WnWing_WH
         )
-        k_abs *= n_layer
+        k_abs *= (n_layer * gas['VMR'][layer_idx])
     else:
         k_abs = np.zeros_like(wn_grid)
     # Сохраняем во временный файл с именем, содержащим индекс слоя
     temp_file = TEMP_DIR / f"{gas['name']}_layer_{layer_idx}.npy"
     np.save(temp_file, k_abs)
 
-    print(f'Газ {gas['name']} в {layer_idx} слое посчитан')
+    print(f'Газ {gas["name"]} в {layer_idx} слое посчитан')
 
     return None
 
