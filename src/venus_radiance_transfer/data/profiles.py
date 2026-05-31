@@ -49,7 +49,7 @@ def generate_aerosol_profiles(h_km, modes):
         
         mode['density'] = density_aerosol
 
-    print(f'Профили концентраций аэрозоля созданы, число мод = {len(modes)}, профиль - {len(modes[0]['density'])} км')
+    print(f'Профили концентраций аэрозоля созданы, число мод = {len(modes)}, профиль - {len(modes[0]["density"])} км')
     return None
 
 def interpolate_aerosol_ext(modes, nu_grid):
