@@ -24,12 +24,22 @@ data/processed/*.h5
 data/plots/old_plots/
 data/processed/old_results/
 data/processed/k_abs/
+data/processed/hitran/
+data/raw/
 *.png
 *.h5
 *.npy
 *.data
 *.header
 *.mat
+*.biermann
+
+# Extra notebooks and files
+check.ipynb
+plot.py
+*.size_parameter
+*.size_parameter-shm
+*.size_parameter-wal
 
 # Настройки IDE
 .vscode/
