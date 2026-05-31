@@ -1,8 +1,7 @@
 """Главный скрипт: загружает конфиг, читает данные, вычисляет и сохраняет результаты"""
 
 import numpy as np
-from hapi import db_begin
-from .config import DATA_PROCESSED_DIR, GASES, O3_PROFILE_CONFIG, HITRAN_CACHE_DIR, OUTPUT_FILENAME
+from .config import DATA_PROCESSED_DIR, GASES, O3_PROFILE_CONFIG, OUTPUT_FILENAME
 from .data.reader import load_vira_profile, load_aerosol_modes
 from .data.profiles import generate_o3_profile, generate_o3_diluents, generate_aerosol_profiles
 from .physics.radiation import integrate_radiation
