@@ -17,9 +17,12 @@ def planck_intensity(wavenumber, T):
     """
     exp_x = np.exp((H * C * wavenumber) / (K * T))
     B = 2 * H * C**2 * wavenumber**3 / (exp_x - 1)
+    B = np.nan_to_num(B, nan=0.0)
     return B
 
 def brightness_temperature(wavenumber, intensity):
     """Обратная функция Планка – яркостная температура."""
     a = 2 * H * C**2 * wavenumber**3
-    return C2 * wavenumber / np.log(1 + a / intensity)
+    T = C2 * wavenumber / np.log(1 + a / intensity)
+    T = np.nan_to_num(T, nan=0.0, posinf=0.0)
+    return T
