@@ -1,6 +1,7 @@
 """Расчёт объёмных коэффициентов поглощения газов и аэрозолей"""
 
 import numpy as np
+from tqdm import tqdm
 from hapi import db_begin, absorptionCoefficient_Voigt
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from ..config import HITRAN_CACHE_DIR, N_WORKERS, TEMP_DIR
@@ -66,23 +67,28 @@ def compute_k_abs_gas_parallel(gas, n_layers, P_atm, T_K, n_all, wn_grid):
     
     with ProcessPoolExecutor(max_workers=N_WORKERS) as executor:
         futures = []
-        for i in range(n_layers):
+        for i in range(CUT_HEIGHT, n_layers):
+            temp_file = TEMP_DIR / f"{gas['name']}_layer_{i}.npy"
+            if temp_file.exists():
+                print(f'Загружаю газ {gas['name']} в слое {i} из временного файла')
+                continue
+
             futures.append(executor.submit(
                 compute_k_abs_layer_gas,
                 gas, i, P_atm[i], T_K[i], n_all[i], wn_grid
             ))
         # Ждём завершения всех задач
-        for future in as_completed(futures):
+        for future in tqdm(as_completed(futures), total=len(futures), desc="Processing"):
             future.result()   # если было исключение – поднимется здесь
 
     # После завершения всех процессов – объединяем временные файлы в HDF5
-    for i in range(n_layers):
-        temp_file = TEMP_DIR / f"{gas['name']}_layer_{i}.npy"
+    for i in range(n_layers-CUT_HEIGHT):
+        temp_file = TEMP_DIR / f"{gas['name']}_layer_{CUT_HEIGHT+i}.npy"
         k_abs = np.load(temp_file)
         save_k_abs_layer(gas['name'], i, k_abs)
         temp_file.unlink()   # удаляем временный файл
 
-    print(f'Газ {gas['name']} полностью рассчитан и сохранен')
+    print(f'Газ {gas["name"]} полностью рассчитан и сохранен')
 
     return None
 
@@ -95,18 +101,23 @@ def compute_k_abs_aerosol_parallel(modes, n_layers, wn_grid):
     
     with ProcessPoolExecutor(max_workers=N_WORKERS) as executor:
         futures = []
-        for i in range(n_layers):
+        for i in range(CUT_HEIGHT, n_layers):
+            temp_file = TEMP_DIR / f"aerosol_layer_{i}.npy"
+            if temp_file.exists():
+                print(f'Загружаю аэрозоль в слое {i} из временного файла')
+                continue
+
             futures.append(executor.submit(
                 compute_k_abs_layer_aerosol,
                 i, modes, wn_grid
             ))
         # Ждём завершения всех задач
-        for future in as_completed(futures):
+        for future in tqdm(as_completed(futures), total=len(futures), desc="Processing"):
             future.result()   # если было исключение – поднимется здесь
 
     # После завершения всех процессов – объединяем временные файлы в HDF5
-    for i in range(n_layers):
-        temp_file = TEMP_DIR / f"aerosol_layer_{i}.npy"
+    for i in range(n_layers-CUT_HEIGHT):
+        temp_file = TEMP_DIR / f"aerosol_layer_{CUT_HEIGHT+i}.npy"
         k_abs = np.load(temp_file)
         save_k_abs_layer('aerosol', i, k_abs)
         temp_file.unlink()   # удаляем временный файл
